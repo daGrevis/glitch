@@ -1,0 +1,8 @@
+/bin/
+/include/
+/lib/
+/man/
+*.py[co]
+/share/
+screenshot1.png
+screenshot2.png
