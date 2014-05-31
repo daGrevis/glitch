@@ -1,6 +1,9 @@
 import logging
-from selenium import webdriver
 from os.path import exists
+
+import requests
+from selenium import webdriver
+from PIL import Image, ImageChops
 
 
 logger = logging.getLogger(__name__)
@@ -11,8 +14,9 @@ logger.addHandler(console_handler)
 
 
 LINK = "http://127.0.0.1:4000/"
-FIRST_FILENAME = "screenshot1.png"
-SECOND_FILENAME = "screenshot2.png"
+FILENAME_FOR_SCREENSHOT_BEFORE = "screenshot_before.png"
+FILENAME_FOR_SCREENSHOT_AFTER = "screenshot_after.png"
+FILENAME_FOR_SCREENSHOT_DIFFERENCE = "screenshot_difference.png"
 
 
 def save_screenshot(link, filename):
@@ -21,17 +25,32 @@ def save_screenshot(link, filename):
     browser.save_screenshot(filename)
     browser.quit()
 
-if not exists(FIRST_FILENAME):
+
+try:
+    requests.get(LINK)
+except requests.exceptions.ConnectionError:
+    logger.error("Could not open the link! Is the server down?")
+
+    exit()
+
+if not exists(FILENAME_FOR_SCREENSHOT_BEFORE):
     logger.info("No screenshot was found, creating one.")
-    save_screenshot(LINK, FIRST_FILENAME)
+
+    save_screenshot(LINK, FILENAME_FOR_SCREENSHOT_BEFORE)
 else:
     logger.info("Screenshot was found, creating a new one for comparison.")
-    save_screenshot(LINK, SECOND_FILENAME)
-    with open(FIRST_FILENAME) as screenshot1:
-        screenshot1_content = screenshot1.read()
-    with open(SECOND_FILENAME) as screenshot2:
-        screenshot2_content = screenshot2.read()
-    if screenshot1_content == screenshot2_content:
+
+    save_screenshot(LINK, FILENAME_FOR_SCREENSHOT_AFTER)
+    screenshot_before = Image.open(FILENAME_FOR_SCREENSHOT_BEFORE)
+    screenshot_after = Image.open(FILENAME_FOR_SCREENSHOT_AFTER)
+
+    if screenshot_before.tostring() == screenshot_after.tostring():
         logger.info("Screenshots are identical!")
     else:
-        logger.info("Screenshots differ!")
+        difference = ImageChops.difference(screenshot_before, screenshot_after)
+        difference = ImageChops.invert(difference)
+        difference.save(FILENAME_FOR_SCREENSHOT_DIFFERENCE)
+
+        message = ("Screenshots differ, see `{}`."
+                   .format(FILENAME_FOR_SCREENSHOT_DIFFERENCE))
+        logger.info(message)
