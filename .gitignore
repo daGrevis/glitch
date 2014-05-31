@@ -4,6 +4,4 @@
 /man/
 *.py[co]
 /share/
-screenshot_before.png
-screenshot_after.png
-screenshot_difference.png
+/screenshots/
