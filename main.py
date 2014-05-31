@@ -89,6 +89,10 @@ for link in configuration["links"]:
         if screenshot_before.tostring() == screenshot_after.tostring():
             logger.info("Screenshots are identical!")
         else:
+            if screenshot_before.size != screenshot_after.size:
+                logger.info("Sizes of screenshots are not the same.")
+                exit()
+
             path_to_screenshot_difference = path.join(
                 path_to_screenshots_directory,
                 FILENAME_FOR_SCREENSHOT_DIFFERENCE)
